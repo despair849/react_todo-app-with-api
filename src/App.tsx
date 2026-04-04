@@ -92,16 +92,28 @@ export const App: React.FC = () => {
     };
 
     setTempTodo(newTempTodo);
-    setTitle('');
 
     try {
       const addedTodo = await todoService.addTodo(newTempTodo);
 
       setTodos(prev => [...prev, addedTodo]);
       setTempTodo(null);
+      setTitle('');
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      });
     } catch {
       setError('Unable to add a todo');
       setTempTodo(null);
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      });
+
+      setTimeout(() => {
+        setError('');
+      }, 3000);
     }
   };
 
@@ -111,8 +123,16 @@ export const App: React.FC = () => {
     try {
       await todoService.deleteTodo(id);
       setTodos(prev => prev.filter(todo => todo.id !== id));
+
+      setTimeout(() => {
+        inputRef.current?.focus();
+      });
     } catch {
       setError('Unable to delete a todo');
+
+      setTimeout(() => {
+        setError('');
+      }, 3000);
     } finally {
       setProcessingIds(prev => prev.filter(pid => pid !== id));
     }
@@ -138,8 +158,16 @@ export const App: React.FC = () => {
     setProcessingIds(prev => prev.filter(id => failed.includes(id)));
 
     if (failed.length > 0) {
-      setError('Some todos could not be deleted');
+      setError('Unable to delete a todo');
+
+      setTimeout(() => {
+        setError('');
+      }, 3000);
     }
+
+    setTimeout(() => {
+      inputRef.current?.focus();
+    });
   };
 
   const handleToggle = async (todo: Todo) => {
@@ -255,12 +283,14 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <header className="todoapp__header">
-          <button
-            type="button"
-            className={`todoapp__toggle-all ${allCompleted ? 'active' : ''}`}
-            data-cy="ToggleAllButton"
-            onClick={handleToggleAll}
-          />
+          {todos.length > 0 && (
+            <button
+              type="button"
+              className={`todoapp__toggle-all ${allCompleted ? 'active' : ''}`}
+              data-cy="ToggleAllButton"
+              onClick={handleToggleAll}
+            />
+          )}
 
           <form onSubmit={handleSubmit}>
             <input
@@ -272,7 +302,7 @@ export const App: React.FC = () => {
               placeholder="What needs to be done?"
               onChange={event => setTitle(event.target.value)}
               autoFocus
-              disabled={false}
+              disabled={tempTodo !== null}
             />
           </form>
         </header>
@@ -280,8 +310,6 @@ export const App: React.FC = () => {
         {(todos.length > 0 || tempTodo) && (
           <section className="todoapp__main" data-cy="TodoList">
             {visibleTodos.map(todo => {
-              const isDeleting = processingIds.includes(todo.id);
-
               return (
                 <div
                   key={todo.id}
@@ -329,16 +357,14 @@ export const App: React.FC = () => {
                     x
                   </button>
 
-                  {isDeleting && (
-                    <div
-                      data-cy="TodoLoader"
-                      className="modal overlay is-active"
-                    >
-                      {/* eslint-disable-next-line max-len */}
-                      <div className="modal-background has-background-white-ter" />
-                      <div className="loader" />
-                    </div>
-                  )}
+                  <div
+                    data-cy="TodoLoader"
+                    className={`modal overlay ${processingIds.includes(todo.id) ? 'is-active' : ''}`}
+                  >
+                    {/* eslint-disable-next-line max-len */}
+                    <div className="modal-background has-background-white-ter" />
+                    <div className="loader" />
+                  </div>
                 </div>
               );
             })}
