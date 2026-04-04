@@ -241,11 +241,15 @@ export const App: React.FC = () => {
       setTodos(prev =>
         prev.map(t => (t.id === todo.id ? { ...t, title: trimmedTitle } : t)),
       );
+      setEditingTodoId(null);
     } catch {
       setError('Unable to update a todo');
+
+      setTimeout(() => {
+        setError('');
+      }, 3000);
     } finally {
       setProcessingIds(prev => prev.filter(id => id !== todo.id));
-      setEditingTodoId(null);
     }
   };
 
@@ -328,8 +332,10 @@ export const App: React.FC = () => {
 
                   {editingTodoId === todo.id ? (
                     <input
-                      className="todo__edit"
+                      data-cy="TodoTitleField"
+                      className="todo__title-field"
                       value={editingTitle}
+                      placeholder="Empty todo will be deleted"
                       autoFocus
                       onChange={e => setEditingTitle(e.target.value)}
                       onBlur={() => saveTodo(todo)}
@@ -348,14 +354,16 @@ export const App: React.FC = () => {
                     </span>
                   )}
 
-                  <button
-                    type="button"
-                    className="todo__remove"
-                    data-cy="TodoDelete"
-                    onClick={() => handleDelete(todo.id)}
-                  >
-                    x
-                  </button>
+                  {editingTodoId !== todo.id && (
+                    <button
+                      type="button"
+                      className="todo__remove"
+                      data-cy="TodoDelete"
+                      onClick={() => handleDelete(todo.id)}
+                    >
+                      x
+                    </button>
+                  )}
 
                   <div
                     data-cy="TodoLoader"
