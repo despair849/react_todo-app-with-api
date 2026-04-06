@@ -6,40 +6,15 @@ import { Todo } from './types/Todo';
 import { USER_ID } from './constants';
 import { Header } from './components/Header';
 import { TodoList } from './components/TodoList';
+import { Footer } from './components/Footer';
+import { ErrorNotification } from './components/ErrorNotification';
+import { ErrorMessage } from './types/ErrorMessage';
 
 export enum Filter {
   All = 'all',
   Active = 'active',
   Completed = 'completed',
 }
-
-type FilterItem = {
-  label: string;
-  value: Filter;
-  href: string;
-  dataCy: string;
-};
-
-const filters: FilterItem[] = [
-  {
-    label: 'All',
-    value: Filter.All,
-    href: '#/',
-    dataCy: 'FilterLinkAll',
-  },
-  {
-    label: 'Active',
-    value: Filter.Active,
-    href: '#/active',
-    dataCy: 'FilterLinkActive',
-  },
-  {
-    label: 'Completed',
-    value: Filter.Completed,
-    href: '#/completed',
-    dataCy: 'FilterLinkCompleted',
-  },
-];
 
 export const App: React.FC = () => {
   // #region states
@@ -63,47 +38,13 @@ export const App: React.FC = () => {
         return true;
     }
   });
-  const activeTodos = todos.filter(todo => !todo.completed).length;
-
-  // #region handlers
-  const handleClearCompleted = async () => {
-    const completedTodos = todos.filter(todo => todo.completed);
-
-    setProcessingIds(completedTodos.map(todo => todo.id));
-
-    const results = await Promise.allSettled(
-      completedTodos.map(todo => todoService.deleteTodo(todo.id)),
-    );
-
-    const failed = results
-      .map((res, i) => ({ res, id: completedTodos[i].id }))
-      .filter(r => r.res.status === 'rejected')
-      .map(r => r.id);
-
-    setTodos(prev =>
-      prev.filter(todo => !todo.completed || failed.includes(todo.id)),
-    );
-    setProcessingIds(prev => prev.filter(id => failed.includes(id)));
-
-    if (failed.length > 0) {
-      setError('Unable to delete a todo');
-
-      setTimeout(() => {
-        setError('');
-      }, 3000);
-    }
-
-    setTimeout(() => {
-      inputRef.current?.focus();
-    });
-  };
 
   useEffect(() => {
     todoService
       .getTodos(USER_ID)
       .then(setTodos)
       .catch(() => {
-        setError('Unable to load todos');
+        setError(ErrorMessage.LoadTodos);
 
         setTimeout(() => {
           setError('');
@@ -150,50 +91,19 @@ export const App: React.FC = () => {
         )}
 
         {todos.length > 0 && (
-          <footer className="todoapp__footer" data-cy="Footer">
-            <span className="todo-count" data-cy="TodosCounter">
-              {activeTodos} items left
-            </span>
-
-            <nav className="filter" data-cy="Filter">
-              {filters.map(item => (
-                <a
-                  key={item.value}
-                  href={item.href}
-                  className={`filter__link ${filter === item.value ? 'selected' : ''}`}
-                  data-cy={item.dataCy}
-                  onClick={() => setFilter(item.value)}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <button
-              type="button"
-              className="todoapp__clear-completed"
-              data-cy="ClearCompletedButton"
-              disabled={todos.filter(t => t.completed).length === 0}
-              onClick={handleClearCompleted}
-            >
-              Clear completed
-            </button>
-          </footer>
+          <Footer
+            todos={todos}
+            setProcessingIds={setProcessingIds}
+            setTodos={setTodos}
+            setError={setError}
+            inputRef={inputRef}
+            filter={filter}
+            setFilter={setFilter}
+          />
         )}
       </div>
 
-      <div
-        data-cy="ErrorNotification"
-        className={`notification is-danger is-light has-text-weight-normal ${!error ? 'hidden' : ''}`}
-      >
-        <button
-          data-cy="HideErrorButton"
-          type="button"
-          className="delete"
-          onClick={() => setError('')}
-        />
-        {error}
-      </div>
+      <ErrorNotification error={error} setError={setError} />
     </div>
   );
 };

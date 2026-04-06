@@ -2,6 +2,7 @@
 import React from 'react';
 import { Todo } from '../types/Todo';
 import * as todoService from '../api/todos';
+import { ErrorMessage } from '../types/ErrorMessage';
 
 type TodoItemProps = {
   todo: Todo;
@@ -39,7 +40,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         inputRef.current?.focus();
       });
     } catch {
-      setError('Unable to delete a todo');
+      setError(ErrorMessage.DeleteTodo);
 
       setTimeout(() => {
         setError('');
@@ -62,7 +63,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         ),
       );
     } catch {
-      setError('Unable to update a todo');
+      setError(ErrorMessage.UpdateTodo);
     } finally {
       setProcessingIds(prev => prev.filter(id => id !== todoItem.id));
     }
@@ -94,7 +95,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       );
       setEditingTodoId(null);
     } catch {
-      setError('Unable to update a todo');
+      setError(ErrorMessage.UpdateTodo);
 
       setTimeout(() => {
         setError('');

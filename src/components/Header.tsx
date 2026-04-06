@@ -2,6 +2,7 @@ import React from 'react';
 import { Todo } from '../types/Todo';
 import { USER_ID } from '../constants';
 import * as todoService from '../api/todos';
+import { ErrorMessage } from '../types/ErrorMessage';
 
 type HeaderProps = {
   todos: Todo[];
@@ -35,7 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
     const trimmedTitle = title.trim();
 
     if (!trimmedTitle) {
-      setError('Title should not be empty');
+      setError(ErrorMessage.EmptyTitle);
 
       setTimeout(() => {
         setError('');
@@ -64,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
         inputRef.current?.focus();
       });
     } catch {
-      setError('Unable to add a todo');
+      setError(ErrorMessage.AddTodo);
       setTempTodo(null);
 
       setTimeout(() => {
@@ -101,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
         ),
       );
     } catch {
-      setError('Unable to update todos');
+      setError(ErrorMessage.UpdateTodos);
     } finally {
       setProcessingIds(prev =>
         prev.filter(id => !todosToUpdate.some(t => t.id === id)),
